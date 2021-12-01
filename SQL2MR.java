@@ -1,8 +1,3 @@
-/*
- * @Author: Cyrus Yang
- * @Date: 2021-12-02 03:06:04
- * @LastEditTime: 2021-12-02 04:25:29
- */
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -14,48 +9,54 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-
+import java.io.IOException;
 import java.util.Map;
 import java.io.IOException;
 import java.util.*;
-
 public class SQL2MR{
-	public static class CountMapper
+	public static class TokenizeMapper
 	extends Mapper<Object, Text, Text, FloatWritable>{
-		public void map(Object key, Text row, Context context) throws IOException, InterruptedException {
-			String[] cols = row.toString().split("\t");
-            int length = Integer.parseInt(cols[2]);
-            if (length >= 60){
-                context.write(new Text(cols[3]), new FloatWritable(Float.parseFloat(cols[1])));
-            }
+		private Text word=new Text();
+		public void map(Object key, Text line, Context context) throws IOException, InterruptedException {
+			String[] tokens = line.toString().split("\t");
+			List<String> token=new ArrayList<String>();
+            token=Arrays.asList(tokens);
+			if (token.size()==4){
+				int length= Integer.parseInt(tokens[2]);
+				if (length>=60){
+					FloatWritable value = new FloatWritable(Float.parseFloat(tokens[1]));
+                    word.set(tokens[3]);
+                	context.write(word, value);
+				}
+			}
 		}
-    }
-    public static class CountReducer 
+	}
+	public static class CountReducer 
     extends Reducer<Text, FloatWritable, Text, FloatWritable>{
-		private FloatWritable rate_mean = new FloatWritable();
-		public void reduce(Text key, Iterable<FloatWritable> rates, Context context) throws IOException, InterruptedException {
-			int count = 0;
-			float rate_sum = 0;
-            for (FloatWritable rate: rates){
-				count += 1;
-				rate_sum += rate.get();
+		private FloatWritable rental_mean=new FloatWritable();
+		public void reduce(Text key, Iterable<FloatWritable> values, Context context) throws IOException, InterruptedException {
+			int sum=0;
+			float rental_sum=0;
+            for (FloatWritable val: values){
+				sum += 1;
+				rental_sum += val.get();
 			}
-			if (count >= 160){
-				rate_mean.set(rate_sum / count);
-				context.write(key, rate_mean);
+			if (sum>=160){
+				rental_mean.set(rental_sum / sum);
+				context.write(key, rental_mean);
 			}
 		}
-    }
-    public static void main(String[] argv) throws Exception {
+	}
+	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "SQL2MR");
 		job.setJarByClass(SQL2MR.class);
-		job.setMapperClass(CountMapper.class);
+		job.setMapperClass(TokenizeMapper.class);
 		job.setReducerClass(CountReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(FloatWritable.class);
-		FileInputFormat.addInputPath(job,new Path(argv[0]));
-		FileOutputFormat.setOutputPath(job,new Path(argv[1]));
+		FileInputFormat.addInputPath(job,new Path(args[0]));
+		FileOutputFormat.setOutputPath(job,new Path(args[1]));
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }
