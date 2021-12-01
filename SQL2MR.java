@@ -26,7 +26,7 @@ public class SQL2MR{
 			String[] cols = row.toString().split("\t");
             int length = Integer.parseInt(cols[2]);
             if (length >= 60){
-                context.write(new Text(cols[3]), new FloatWritable(Float.parseFloat(cols[1]));
+                context.write(new Text(cols[3]), new FloatWritable(Float.parseFloat(cols[1])));
             }
 		}
     }
