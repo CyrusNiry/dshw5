@@ -16,10 +16,9 @@ spark.sparkContext.setLogLevel("WARN")
 # a)
 print('## a)')
 films = sc.textFile('film.csv')
-counts = films.map(lambda x: x.split(',')).filter(
+count = films.map(lambda x: x.split(',')).filter(
     lambda List: List[10] == '"PG"' or List[10] == '"PG-13"').map(lambda List: (List[10], 1)).count()
-for count in list(counts):
-    print(count)
+print(count)
 
 # b)
 print('## b)')
