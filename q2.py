@@ -21,9 +21,9 @@ actor = spark.read.option("header", "true").csv('actor.csv')
 #      ].agg(fc.count('*').alias('count')).show()
 
 # b)
-print('## b)')
-join_df = film.join(film_actor, "film_id").join(actor, "actor_id")
-join_df[join_df.title == "ANONYMOUS HUMAN"][['first_name', 'last_name']].show()
+# print('## b)')
+# join_df = film.join(film_actor, "film_id").join(actor, "actor_id")
+# join_df[join_df.title == "ANONYMOUS HUMAN"][['first_name', 'last_name']].show()
 
 # c)
 print('## c)')
